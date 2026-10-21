@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-board",
+  "description": "The claude-board plugin",
+  "owner": {
+    "name": "xin30hp"
+  },
+  "plugins": [
+    {
+      "name": "claude-board",
+      "description": "A work board shared between you and Claude: rules, session-start hook, /board-init",
+      "source": "./"
+    }
+  ]
+}

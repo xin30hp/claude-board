@@ -1,0 +1,16 @@
+{
+  "description": "Puts the board rules, the board's item counts and the startup steps into context at session start",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/session_start.sh\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
