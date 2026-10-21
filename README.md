@@ -22,15 +22,37 @@ The full rules are in `skills/board/board_rules.md`.
 
 ## Install
 
-In Claude Code:
+The hook needs Python 3.8 or later (`python3`, or `python` on Windows).
+
+From a terminal (any shell), with the `claude` command line:
+
+```
+claude plugin marketplace add xin30hp/claude-board
+claude plugin install claude-board@claude-board
+claude plugin list
+```
+
+The first command registers this repo as a plugin source, the second installs the plugin for your user (all
+projects), and `claude plugin list` should then show `claude-board@claude-board` as enabled. If `claude` isn't on
+your PATH, call it by its full path, e.g. on Windows `%USERPROFILE%\.local\bin\claude.exe plugin install ...`.
+
+Or inside a Claude Code session:
 
 ```
 /plugin marketplace add xin30hp/claude-board
 /plugin install claude-board@claude-board
 ```
 
-For a local clone, use its path instead: `/plugin marketplace add E:/path/to/claude-board`.
-The hook needs Python 3.8 or later (`python3`, or `python` on Windows).
+Then start a new session (or `/clear`): the plugin's hook runs at session start. To check it works, open a project
+that has a `claude_board.md` and ask Claude what the session-start context says; it should begin with
+"claude-board plugin (session start: ...)".
+
+To install from a local clone instead, give its path: `claude plugin marketplace add E:/path/to/claude-board`.
+To get a newer version later: `claude plugin marketplace update claude-board`, then
+`claude plugin update claude-board@claude-board`, then restart Claude Code.
+
+Claude can't install the plugin for you: it changes what every future session loads, so Claude Code asks you to
+run the install yourself (or to add a permission rule for `claude plugin` commands).
 
 ## Settings
 
