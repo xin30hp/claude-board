@@ -18,10 +18,12 @@ Rules: the claude-board plugin's board skill (keys, status and category tags, la
 ## Queue
 
 Lanes:
+
 - Machine: Q1b (~14:00); next Q1c, Q2.
 - Code: idle.
 
 In order (approved YYYY-MM-DD):
+
 - Q1 (Running: refresh.log; machine lane): Refresh the data, then verify it.
   - Q1a (Done: abc1234): Progress lines for the refresh.
   - Q1b (Running: refresh.log): The refresh itself, finish around 14:00.
