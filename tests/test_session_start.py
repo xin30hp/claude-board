@@ -131,6 +131,10 @@ class SessionStartTest(unittest.TestCase):
         again: dict[str, Any] | None = run_hook(self.project)
         assert again is not None
         self.assertNotIn("rules copy", again["hookSpecificOutput"]["additionalContext"])
+        copy.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))  # as git checks it out on Windows
+        crlf: dict[str, Any] | None = run_hook(self.project)
+        assert crlf is not None
+        self.assertNotIn("rules copy", crlf["hookSpecificOutput"]["additionalContext"])
         copy.write_text(text.replace("Asks", "Questions"), encoding="utf-8")
         run_hook(self.project)
         self.assertEqual(copy.read_text(encoding="utf-8"), text)

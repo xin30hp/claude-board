@@ -228,7 +228,7 @@ def sync_rules_copy(project: Path, settings: dict[str, Any]) -> str | None:
     text: str = render_rules_copy(settings)
     if path.is_file():
         old: str = path.read_text(encoding="utf-8")
-        if old == text:
+        if old.replace("\r\n", "\n") == text:  # git may check it out with CRLF on Windows
             return None
         if GENERATED_MARK not in old:
             return (f"{path} is hand-written (no \"{GENERATED_MARK}\" line), so the plugin left it alone; the "
