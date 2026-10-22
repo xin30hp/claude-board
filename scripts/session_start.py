@@ -22,6 +22,9 @@ DEFAULT_CRON: str = "7 * * * *"
 DEFAULT_RULES_COPY: str = "notes/board_rules.md"
 PLUGIN_ROOT: Path = Path(__file__).resolve().parent.parent
 RULES_PATH: Path = PLUGIN_ROOT / "skills" / "board" / "board_rules.md"
+WATCHER_SKELETON: Path = PLUGIN_ROOT / "templates" / "board_watcher.py"
+# A copied watcher whose FILL IN parts aren't written yet still has this line.
+UNFILLED: re.Pattern[str] = re.compile(r"^SKELETON_UNFILLED\b.*=\s*True", re.MULTILINE)
 # Board sections in order, with the key letter of their items.
 SECTIONS: dict[str, str] = {"Todo": "T", "Asks": "A", "Recommends": "R", "Queue": "Q"}
 SINGULAR: dict[str, str] = {"Todo": "todo", "Asks": "ask", "Recommends": "recommend", "Queue": "queued"}
@@ -135,8 +138,26 @@ def shown_path(project: str, relative: str) -> str:
     return f"{project}/{relative}" if project == REPO_PLACEHOLDER else str(Path(project) / relative)
 
 
+def watcher_state(project: Path, settings: dict[str, Any]) -> str:
+    """Return "" without a `watcher` setting, else "missing", "unfilled" (still the skeleton) or "ready"."""
+    name: Any = settings.get("watcher")
+    if not name:
+        return ""
+    path: Path = project / str(name)
+    if not path.is_file():
+        return "missing"
+    return "unfilled" if UNFILLED.search(path.read_text(encoding="utf-8", errors="replace")) else "ready"
+
+
+def wait_alert_command(settings: dict[str, Any]) -> str | None:
+    """Return the wait-alert command: the `wait_alert` setting, else the `watcher` script's --wait-alert, else None."""
+    if settings.get("wait_alert"):
+        return str(settings["wait_alert"])
+    return f"python -u {settings['watcher']} --wait-alert" if settings.get("watcher") else None
+
+
 def startup_steps(settings: dict[str, Any], source: str, project: str, board_exists: bool,
-                  board_line: str) -> list[str]:
+                  board_line: str, watcher: str = "") -> list[str]:
     """Return the numbered startup steps for a session start.
 
     Args:
@@ -145,13 +166,14 @@ def startup_steps(settings: dict[str, Any], source: str, project: str, board_exi
         project: The project's path as shown (absolute in the hook, REPO_PLACEHOLDER in the rules copy).
         board_exists: Whether the board file exists.
         board_line: The example board summary line to tell the user.
+        watcher: The watcher's state (`watcher_state`); "missing" or "unfilled" adds a step to set it up.
     """
     board_name: str = str(settings.get("board", DEFAULT_BOARD))
     board: str = shown_path(project, board_name)
     status_name: str | None = settings.get("status_file")
     status: str | None = shown_path(project, status_name) if status_name else None
     helper: str | None = settings.get("helper")
-    wait_alert: str | None = settings.get("wait_alert")
+    wait_alert: str | None = wait_alert_command(settings)
     steps: list[str] = []
     if board_exists:
         steps.append(
@@ -168,7 +190,18 @@ def startup_steps(settings: dict[str, Any], source: str, project: str, board_exi
             f"Helper session: {helper}. After ListAgents, if it is live, send it this message (SendMessage); if "
             f"not, gently ask the user to start one. {helper_howto(helper, Path(board_name).name)}\n{message}"
         )
-    if wait_alert:
+    if watcher in ("missing", "unfilled"):
+        shown: str = shown_path(project, str(settings["watcher"]))
+        steps.append(
+            (f"The settings name a watcher ({shown}) that doesn't exist yet: copy the plugin's skeleton "
+             f"({WATCHER_SKELETON}) there. Then it" if watcher == "missing" else
+             f"The watcher ({shown}) is still the plugin's skeleton (SKELETON_UNFILLED = True), so it")
+            + " needs filling in for this project before Claude relies on it: write its FILL IN parts (JOBS: the "
+            "long runs to watch; project_checks: anything else that should alert), posting an Ask for anything "
+            "that needs the user; set SKELETON_UNFILLED = False; try it with --once; then start it detached with "
+            "--supervise (commands in its docstring)."
+        )
+    if wait_alert and watcher != "missing":
         steps.append(
             f"Start the wait-alert as a background task: {wait_alert} (run from the project root). It replaces "
             "only this session's older wait (or one whose session ended); if it reports that another live session "
@@ -252,7 +285,8 @@ def build_context(project: Path, settings: dict[str, Any], source: str) -> str:
     if board.is_file():
         text: str = board.read_text(encoding="utf-8")
         board_line = summary_line(board.name, count_items(text), untagged_todos(text)) + " (counted by the hook)"
-    steps: list[str] = startup_steps(settings, source, str(project), board.is_file(), board_line)
+    steps: list[str] = startup_steps(settings, source, str(project), board.is_file(), board_line,
+                                     watcher_state(project, settings))
     lines.append("Startup steps now:")
     i: int
     step: str

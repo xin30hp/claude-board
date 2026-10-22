@@ -16,7 +16,13 @@ Set up the claude-board work board in the current project:
    - `helper`: the name of a helper Claude session (as ListAgents shows it) that runs the hourly status job
    - `helper_cron`: that job's schedule (default `7 * * * *`)
    - `rules_copy`: where to keep the generated copy of the rules (default `notes/board_rules.md`; `""` for none)
-   Ask the user which apply, in one question; with no answer, write `{}`.
+   - `watcher`: a token-free monitor of long runs that wakes Claude with alerts (suggest `tools/board_watcher.py`,
+     with `status_file` `log_files/watcher_status.txt`); worth it when the project has runs of 10+ minutes
+   Ask the user which apply, in one question, explaining the helper and the watcher in a line each; with no
+   answer, write `{}`.
+   If they chose a watcher: copy `${CLAUDE_PLUGIN_ROOT}/templates/board_watcher.py` to the `watcher` path, fill in
+   its FILL IN parts for this project (the plugin README's "Filling it in"), set SKELETON_UNFILLED = False, try
+   `--once`, and start it detached with `--supervise` (commands in its docstring).
 4. Write the rules copy: from the project root, run `python "${CLAUDE_PLUGIN_ROOT}/scripts/session_start.py"
    --rules-copy` (`python3` on macOS and Linux). Suggest a line in the project's CLAUDE.md for machines without
    the plugin: "Without the claude-board plugin, follow notes/board_rules.md (its startup section)."

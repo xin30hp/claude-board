@@ -8,5 +8,6 @@ rules, the board's item counts and the startup steps into context at the start o
 looking them up later in a long session.
 
 The project's settings are in `.claude/claude-board.json` (all optional; see the plugin README): `board`,
-`template`, `status_file`, `wait_alert`, `helper`, `helper_cron` and `rules_copy` (the generated copy of these
-rules in the project, default `notes/board_rules.md`).
+`template`, `status_file`, `wait_alert`, `helper`, `helper_cron`, `rules_copy` (the generated copy of these
+rules in the project, default `notes/board_rules.md`) and `watcher` (the project's copy of the plugin's watcher
+skeleton, `templates/board_watcher.py`; the plugin README's "The watcher" says how to fill it in).

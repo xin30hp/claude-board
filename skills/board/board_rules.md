@@ -27,6 +27,16 @@ also be followed from claude.ai/code or the Claude phone app with Remote Control
 Claude Code > Connect new sessions to Remote Control; Pro, Max, Team or Enterprise plans), so its hourly prints
 show the board away from the computer.
 
+Watcher (optional): a script, not Claude, that checks the project's long runs every minute at no token cost,
+keeps the status file current and appends an ALERT line when something needs Claude; the wait-alert (step 3)
+wakes Claude on one. A project gets one by copying the plugin's skeleton (`templates/board_watcher.py`, named by
+the settings' `watcher`). While the copy still says SKELETON_UNFILLED = True, Claude fills in its FILL IN parts for
+the project (JOBS: the long runs to watch; project_checks: anything else that should alert), posts an Ask for
+anything needing the user, sets it False, tries it with --once and starts it detached with --supervise. Claude
+adds a Job when a long run starts and removes it once its alert is handled (then --restart). Without a watcher,
+Claude checks long runs itself; if the Queue's work needs a watcher or alerts it doesn't have, Claude posts an Ask
+[planning] with a recommendation instead of deciding, and keeps working the rest.
+
 The hourly status job (for the helper): on the settings' cron (default "7 * * * *", hourly at :07), prompt exactly
 "status update"; each run prints the board, then the status file (absolute paths), each verbatim inside its own
 plain code fence (three backticks, no language) so the app shows the raw text instead of rendering markdown, with
