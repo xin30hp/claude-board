@@ -62,7 +62,8 @@ run the install yourself (or to add a permission rule for `claude plugin` comman
 ## Settings
 
 `.claude/claude-board.json` in the project, all keys optional (a project with just `claude_board.md` and no
-settings file uses the defaults):
+settings file uses the defaults). A minimal file is in `templates/claude-board.example.json`; the keys below
+are all the settings there are:
 
 ```
 {
