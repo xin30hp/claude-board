@@ -4,16 +4,28 @@ Rules of the board (claude-board plugin). The board is one markdown file at the 
 unless `.claude/claude-board.json` names another), tracked in git and committed with the work it records. It holds
 the work between the user and Claude and is the running log, so details stay on it.
 
-Startup (every new or cleared session, and when resuming from an idle state, e.g. after a token allowance refresh):
+Startup (every new, cleared or resumed session, and when resuming from an idle state, e.g. after a token allowance
+refresh; after a compaction, steps 1 and 3 only):
 1. Read the board, these rules and the status file (if the settings name one) first, and tell the user the board
-   was read (e.g. "Read claude_board.md: 1 todo, 2 asks, ..."). If the board doesn't exist, create it from the
-   template (`/claude-board:board-init`).
+   was read (e.g. "Read claude_board.md: 1 todo, 2 asks, ..."), naming any untagged Todo (one not taken up yet).
+   If the board doesn't exist, create it from the template (`/claude-board:board-init`).
 2. If the settings name a helper session: after ListAgents, send it one message with the full hourly status job
    (below), saying the user requested it (a helper's permission check once blocked a peer-requested CronCreate)
    and that if still blocked it asks its user to approve. If ListAgents shows no such helper, gently ask the user
-   to start one.
+   to start one, and tell them how (Helper session, below).
 3. If the settings name a wait-alert command: run it as a background task, and start it again after handling each
-   alert.
+   alert. One live session holds the alerts: a new wait replaces only its own session's older one (or one whose
+   session has ended), so if it reports that another live session holds them, leave them there and don't restart
+   it.
+
+Helper session: a second Claude Code session on the same project folder, on a small model (e.g. Haiku), that
+takes the hourly status job and simple jobs the main session hands it. To start one: open the project folder in
+a new session (the Claude Desktop app's Code tab, or `claude` in a terminal), switch to a small model
+(`/model haiku`), and name it as the settings' `helper` says (`/rename <name>`), so ListAgents finds it; approve
+its first CronCreate. It reads and writes the board like any session in that folder. A Desktop app session can
+also be followed from claude.ai/code or the Claude phone app with Remote Control (`/remote-control`, or Settings >
+Claude Code > Connect new sessions to Remote Control; Pro, Max, Team or Enterprise plans), so its hourly prints
+show the board away from the computer.
 
 The hourly status job (for the helper): on the settings' cron (default "7 * * * *", hourly at :07), prompt exactly
 "status update"; each run prints the board, then the status file (absolute paths), each verbatim inside its own

@@ -75,11 +75,12 @@ class SessionStartTest(unittest.TestCase):
         assert out is not None
         context: str = out["hookSpecificOutput"]["additionalContext"]
         self.assertEqual(out["hookSpecificOutput"]["hookEventName"], "SessionStart")
-        self.assertIn("Read claude_board.md: 1 todo, 0 asks, 2 recommends, 1 queued", context)
+        self.assertIn("Read claude_board.md: 1 todo (untagged: T1), 0 asks, 2 recommends, 1 queued", context)
         self.assertIn("Questions for the user go to Asks", context)
-        self.assertNotIn("Helper session", context)
+        self.assertNotIn("Helper session: myHelper", context)
+        self.assertNotIn("Start the wait-alert", context)
 
-    def test_helper_and_wait_alert_on_fresh_sessions_only(self) -> None:
+    def test_helper_and_wait_alert_by_source(self) -> None:
         (self.project / "board.md").write_text(BOARD, encoding="utf-8")
         self.write_settings({
             "board": "board.md", "status_file": "status.txt", "helper": "myHelper",
@@ -92,12 +93,69 @@ class SessionStartTest(unittest.TestCase):
         self.assertIn('cron "5 * * * *"', context)
         self.assertIn(str(self.project / "status.txt"), context)
         self.assertIn("python watcher.py --wait-alert", context)
+        self.assertIn("/rename myHelper", context)
+        resume: dict[str, Any] | None = run_hook(self.project, "resume")
+        assert resume is not None
+        context = resume["hookSpecificOutput"]["additionalContext"]
+        self.assertIn("Helper session: myHelper", context)
+        self.assertIn("python watcher.py --wait-alert", context)
+        # A compaction keeps the helper's cron job but may lose track of the wait
         compact: dict[str, Any] | None = run_hook(self.project, "compact")
         assert compact is not None
         context = compact["hookSpecificOutput"]["additionalContext"]
-        self.assertNotIn("Helper session", context)
-        self.assertNotIn("--wait-alert", context)
+        self.assertNotIn("Helper session: myHelper", context)
+        self.assertIn("python watcher.py --wait-alert", context)
         self.assertIn("Read board.md:", context)
+
+    def test_loose_todos_counted_and_untagged_named(self) -> None:
+        board: str = "## Todo\n\n- T1 (Running: Q2): taken up\n3 pull bookies\n- check the log\n  - a sub-point\n"
+        self.assertEqual(session_start.count_items(board)["Todo"], 3)
+        self.assertEqual(session_start.untagged_todos(board), ["T3", "- check the log"])
+        (self.project / "claude_board.md").write_text(board, encoding="utf-8")
+        out: dict[str, Any] | None = run_hook(self.project)
+        assert out is not None
+        self.assertIn("3 todos (untagged: T3, - check the log)", out["hookSpecificOutput"]["additionalContext"])
+
+    def test_rules_copy_written_refreshed_and_hand_written_kept(self) -> None:
+        (self.project / "claude_board.md").write_text(BOARD, encoding="utf-8")
+        self.write_settings({"helper": "myHelper", "status_file": "log/status.txt", "wait_alert": "w --wait"})
+        copy: Path = self.project / "notes" / "board_rules.md"
+        out: dict[str, Any] | None = run_hook(self.project)
+        assert out is not None
+        self.assertIn("Wrote the rules copy", out["hookSpecificOutput"]["additionalContext"])
+        text: str = copy.read_text(encoding="utf-8")
+        self.assertIn(session_start.GENERATED_MARK, text)
+        self.assertIn("Questions for the user go to Asks", text)
+        self.assertIn("<repo>/log/status.txt", text)
+        self.assertNotIn(str(self.project), text)
+        again: dict[str, Any] | None = run_hook(self.project)
+        assert again is not None
+        self.assertNotIn("rules copy", again["hookSpecificOutput"]["additionalContext"])
+        copy.write_text(text.replace("Asks", "Questions"), encoding="utf-8")
+        run_hook(self.project)
+        self.assertEqual(copy.read_text(encoding="utf-8"), text)
+        copy.write_text("# My own rules\n", encoding="utf-8")
+        kept: dict[str, Any] | None = run_hook(self.project)
+        assert kept is not None
+        self.assertIn("hand-written", kept["hookSpecificOutput"]["additionalContext"])
+        self.assertEqual(copy.read_text(encoding="utf-8"), "# My own rules\n")
+
+    def test_rules_copy_turned_off(self) -> None:
+        (self.project / "claude_board.md").write_text(BOARD, encoding="utf-8")
+        self.write_settings({"rules_copy": ""})
+        run_hook(self.project)
+        self.assertFalse((self.project / "notes").exists())
+
+    def test_bump_version(self) -> None:
+        import bump_version
+        text: str = '{\n  "name": "x",\n  "version": "0.1.99",\n  "license": "MIT"\n}\n'
+        bumped: str
+        version: str
+        bumped, version = bump_version.bump(text)
+        self.assertEqual(version, "0.1.100")
+        self.assertEqual(bumped, text.replace("0.1.99", "0.1.100"))
+        with self.assertRaises(ValueError):
+            bump_version.bump('{"name": "x"}')
 
     def test_missing_board_with_settings(self) -> None:
         self.write_settings({})

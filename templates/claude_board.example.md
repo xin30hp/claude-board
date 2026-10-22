@@ -1,7 +1,8 @@
 # Claude board
 
 Work between the user and Claude. The user adds Todos (no tags needed); Claude keeps the rest.
-Rules: the claude-board plugin's board skill (keys, status and category tags, lanes).
+Rules: the claude-board plugin's board skill (keys, status and category tags, lanes); a copy for sessions
+without the plugin is in notes/board_rules.md.
 
 ## Todo
 

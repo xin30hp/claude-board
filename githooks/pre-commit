@@ -1,0 +1,8 @@
+#!/bin/sh
+# Raises the plugin's patch version with every commit (scripts/bump_version.py).
+# Enable once per clone: git config core.hooksPath githooks
+script="$(dirname "$0")/../scripts/bump_version.py"
+if python3 -c "" >/dev/null 2>&1; then
+  exec python3 "$script"
+fi
+exec python "$script"
