@@ -1,13 +1,25 @@
 {
-  "description": "Puts the board rules, the board's item counts and the startup steps into context at session start",
+  "description": "Puts the board rules, the board's item counts and the startup steps into context at session start; with offload_paths set, reminds Claude to hand bulky data reads to the helper",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/session_start.sh\"",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/run_python.sh\" session_start",
             "timeout": 20
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Glob|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/hooks/run_python.sh\" offload_reminder",
+            "timeout": 10
           }
         ]
       }

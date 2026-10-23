@@ -25,7 +25,9 @@ a new session (the Claude Desktop app's Code tab, or `claude` in a terminal), sw
 its first CronCreate. It reads and writes the board like any session in that folder. A Desktop app session can
 also be followed from claude.ai/code or the Claude phone app with Remote Control (`/remote-control`, or Settings >
 Claude Code > Connect new sessions to Remote Control; Pro, Max, Team or Enterprise plans), so its hourly prints
-show the board away from the computer.
+show the board away from the computer. With `offload_paths` set, a hook reminds Claude before it reads bulky data:
+when the helper is live and the result doesn't decide the next step right away, Claude sends it a self-contained
+job (exact files or command, reply format, size limit) and keeps working meanwhile.
 
 Watcher (optional): a script, not Claude, that checks the project's long runs every minute at no token cost,
 keeps the status file current and appends an ALERT line when something needs Claude; the wait-alert (step 3)

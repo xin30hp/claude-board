@@ -19,8 +19,18 @@ Set up the claude-board work board in the current project:
    - `rules_copy`: where to keep the generated copy of the rules (default `notes/board_rules.md`; `""` for none)
    - `watcher`: a token-free monitor of long runs that wakes Claude with alerts (suggest `tools/board_watcher.py`,
      with `status_file` `log_files/watcher_status.txt`); worth it when the project has runs of 10+ minutes
-   Ask the user which apply, in one question, explaining the helper and the watcher in a line each; with no
-   answer, write `{}`.
+   - `offload_paths`: path fragments of the project's bulky data (e.g. `["data/", "logs/", ".sqlite", ".csv"]`);
+     with a `helper`, a hook reminds Claude to hand reads of them to the helper (needs `helper`)
+   Ask the user which apply, in one question with these choices (several allowed), a line each:
+   - Helper: a second Claude session on a small model that prints the board hourly and takes simple jobs.
+   - Offload hooks (with a helper): a reminder before Claude reads bulky data (logs, data files) to hand the
+     read to the helper, so the results don't fill the main session's context.
+   - Watcher: a token-free script that checks long runs every minute and wakes Claude when one needs it.
+   - Neither: just the board.
+   With no answer, write `{}`. Offload hooks without a helper: set `"helper": "auto"` too, saying so.
+   If they chose offload hooks: look at the project's folders for bulky data (data, logs, caches, exports) and
+   propose `offload_paths` from them for the user to confirm; leave out the status file (the hook skips it
+   anyway).
    If they chose a watcher: copy `${CLAUDE_PLUGIN_ROOT}/templates/board_watcher.py` to the `watcher` path, fill in
    its FILL IN parts for this project (the plugin README's "Filling it in"), set SKELETON_UNFILLED = False, try
    `--once`, and start it detached with `--supervise` (commands in its docstring).
@@ -32,6 +42,12 @@ Set up the claude-board work board in the current project:
    session on this folder (the Desktop app's Code tab, or `claude` in a terminal), `/model haiku`,
    `/rename <helper>`, then approve its first CronCreate; it reads and writes claude_board.md like any session
    here, and with Remote Control (`/remote-control`) the user can follow its hourly prints from claude.ai/code or
-   the phone app.
+   the phone app. If `offload_paths` is set, tell them how the offload hooks work (the plugin README's
+   "Offloading to the helper"): they start with the next session (or `/clear`); before Claude reads a listed
+   path it gets a reminder to hand the read to the helper when that is live and the result doesn't decide its
+   next step; nothing is ever blocked; to change what counts, edit `offload_paths` in .claude/claude-board.json;
+   to turn it off, remove the key. Suggest they say in CLAUDE.md which other jobs go to the helper (status
+   checks, searches, mechanical edits from an exact spec) and which stay in the main session (design,
+   decisions, anything touching money or credentials).
 
 $ARGUMENTS
