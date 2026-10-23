@@ -112,7 +112,7 @@ class SessionStartTest(unittest.TestCase):
             "PolymarketHunter": "HaikuPolHun", "polymarket-hunter": "HaikuPolHun",
             "polymarket_hunter": "HaikuPolHun", "PolymarketHunter-reorg": "HaikuPolHun",
             "scraper": "HaikuScrape", "ai-bot": "HaikuAiBot", "XMLParser": "HaikuXmlPar",
-            "claude-board": "HaikuClaBoa", "---": "HaikuHelper",
+            "claude-board": "HaikuClaBoa", "---": "HaikuHelper", "Waeve's_Burgers": "HaikuWaeBur",
         }
         repo: str
         for repo, name in cases.items():

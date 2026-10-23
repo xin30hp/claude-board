@@ -44,7 +44,8 @@ def derive_helper_name(repo: str) -> str:
     3 letters is used whole (ai-bot -> HaikuAiBot), words after the second are dropped. Unique per repo, and
     "Haiku" first keeps the helpers together in ListAgents.
     """
-    words: list[str] = re.findall(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+", repo)
+    # Apostrophes join, not split: Waeve's_Burgers is Waeves + Burgers, not Waeve + s
+    words: list[str] = re.findall(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+", re.sub(r"['’]", "", repo))
     if not words:
         return "HaikuHelper"
     if len(words) == 1:
