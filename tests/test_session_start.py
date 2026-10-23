@@ -107,6 +107,28 @@ class SessionStartTest(unittest.TestCase):
         self.assertIn("python watcher.py --wait-alert", context)
         self.assertIn("Read board.md:", context)
 
+    def test_derive_helper_name(self) -> None:
+        cases: dict[str, str] = {
+            "PolymarketHunter": "HaikuPolHun", "polymarket-hunter": "HaikuPolHun",
+            "polymarket_hunter": "HaikuPolHun", "PolymarketHunter-reorg": "HaikuPolHun",
+            "scraper": "HaikuScrape", "ai-bot": "HaikuAiBot", "XMLParser": "HaikuXmlPar",
+            "claude-board": "HaikuClaBoa", "---": "HaikuHelper",
+        }
+        repo: str
+        for repo, name in cases.items():
+            self.assertEqual(session_start.derive_helper_name(repo), name, repo)
+        worktree: Path = Path("x") / "PolymarketHunter" / ".claude" / "worktrees" / "fix-1"
+        self.assertEqual(session_start.repo_name(worktree), "PolymarketHunter")
+
+    def test_helper_auto(self) -> None:
+        project: Path = self.project / "polymarket-hunter"
+        (project / ".claude").mkdir(parents=True)
+        (project / ".claude" / "claude-board.json").write_text('{"helper": "auto"}', encoding="utf-8")
+        (project / "claude_board.md").write_text(BOARD, encoding="utf-8")
+        out: dict[str, Any] | None = run_hook(project)
+        assert out is not None
+        self.assertIn("/rename HaikuPolHun", out["hookSpecificOutput"]["additionalContext"])
+
     def test_loose_todos_counted_and_untagged_named(self) -> None:
         board: str = "## Todo\n\n- T1 (Running: Q2): taken up\n3 pull bookies\n- check the log\n  - a sub-point\n"
         self.assertEqual(session_start.count_items(board)["Todo"], 3)

@@ -1,6 +1,6 @@
 {
   "name": "claude-board",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "A work board shared between you and Claude (Todo, Asks, Recommends, Queue in claude_board.md): the rules as a skill, a session-start hook that reads the board and runs the startup steps, and /board-init.",
   "author": {
     "name": "xin30hp"

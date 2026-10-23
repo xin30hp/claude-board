@@ -87,7 +87,11 @@ are all the settings there are:
   (or one whose session ended), and when another live session holds them, exit at once saying so; Claude then
   leaves it. The skeleton does this.
 - `helper`: another Claude session (e.g. a cheaper model) that prints the board and status file every hour, via
-  a cron job Claude asks it to create; `helper_cron` sets the schedule. See The helper session below.
+  a cron job Claude asks it to create; `helper_cron` sets the schedule. See The helper session below. `"auto"`
+  names it from the repo's folder: "Haiku" + 3 letters of the first word + 3 of the second (PolymarketHunter ->
+  HaikuPolHun; words split at -, _, spaces and case changes; one word gives 6 letters, scraper -> HaikuScrape; a
+  word under 3 letters is used whole, ai-bot -> HaikuAiBot). Unique per repo, and the helpers sort together in
+  ListAgents. Give a name instead when two repos derive the same one.
 - `rules_copy`: where the hook keeps a copy of the rules, with this project's startup steps filled in (paths under
   `<repo>`, so it is the same on every machine); default `notes/board_rules.md`, `""` turns it off. Commit it,
   and point a fallback at it in CLAUDE.md for machines without the plugin. The hook rewrites it whenever the

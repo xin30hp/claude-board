@@ -36,8 +36,33 @@ TAGGED_TODO: re.Pattern[str] = re.compile(r"-\s*T\d+[a-z]?\s*\([^)]*\):")
 REPO_PLACEHOLDER: str = "<repo>"
 
 
+def derive_helper_name(repo: str) -> str:
+    """Return the helper's default name for a repo: "Haiku" + 3 letters of its first word + 3 of its second.
+
+    Words split at "-", "_", ".", spaces and case changes, so PolymarketHunter, polymarket-hunter and
+    polymarket_hunter all give HaikuPolHun. A single word gives 6 letters (scraper -> HaikuScrape), a word under
+    3 letters is used whole (ai-bot -> HaikuAiBot), words after the second are dropped. Unique per repo, and
+    "Haiku" first keeps the helpers together in ListAgents.
+    """
+    words: list[str] = re.findall(r"[A-Z]+(?![a-z])|[A-Z]?[a-z]+|\d+", repo)
+    if not words:
+        return "HaikuHelper"
+    if len(words) == 1:
+        return "Haiku" + words[0][:6].capitalize()
+    return "Haiku" + words[0][:3].capitalize() + words[1][:3].capitalize()
+
+
+def repo_name(project: Path) -> str:
+    """Return the repo's folder name; for a Claude Code worktree (<repo>/.claude/worktrees/<name>), the repo's."""
+    if project.parent.name == "worktrees" and project.parent.parent.name == ".claude":
+        return project.parent.parent.parent.name
+    return project.name
+
+
 def load_settings(project: Path) -> dict[str, Any] | None:
     """Return the project's board settings, {} when only the default board exists, None without a board.
+
+    A `helper` of "auto" comes back as the derived name (`derive_helper_name`).
 
     Raises:
         ValueError: the settings file isn't a JSON object.
@@ -47,6 +72,8 @@ def load_settings(project: Path) -> dict[str, Any] | None:
         settings: Any = json.loads(path.read_text(encoding="utf-8"))
         if not isinstance(settings, dict):
             raise ValueError(f"{SETTINGS_PATH} must hold a JSON object")
+        if settings.get("helper") == "auto":
+            settings["helper"] = derive_helper_name(repo_name(project))
         return settings
     if (project / DEFAULT_BOARD).is_file():
         return {}

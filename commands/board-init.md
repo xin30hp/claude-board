@@ -13,7 +13,8 @@ Set up the claude-board work board in the current project:
    - `template`: a project-specific template for a new board
    - `status_file`: a status file read at startup and printed by the helper's hourly status job
    - `wait_alert`: a command Claude keeps running as a background task to be woken by alerts
-   - `helper`: the name of a helper Claude session (as ListAgents shows it) that runs the hourly status job
+   - `helper`: the name of a helper Claude session (as ListAgents shows it) that runs the hourly status job;
+     suggest `"auto"` (named from the repo, e.g. PolymarketHunter -> HaikuPolHun; the README's Settings)
    - `helper_cron`: that job's schedule (default `7 * * * *`)
    - `rules_copy`: where to keep the generated copy of the rules (default `notes/board_rules.md`; `""` for none)
    - `watcher`: a token-free monitor of long runs that wakes Claude with alerts (suggest `tools/board_watcher.py`,
